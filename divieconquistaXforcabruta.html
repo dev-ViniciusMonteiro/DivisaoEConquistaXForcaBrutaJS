@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Forca bruta x Div e conquista</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script>
+        function iniciar() {
+
+            var vetor, pontosProximos1//salva pontos principais na variavel iniciar
+            for (var i = 1000; i < 5000; i = i + 1000) {//gera randomicos 4000
+                vetor = gerarPontosRandomico(i);
+            }
+            console.log(vetor) // mostra o vetor no console para ter certeza que foi criado
+                var inicio = Date.now();
+                pontosProximos1 = menorDistanciaEntrePontos(vetor);// forca bruta
+                var fim = Date.now();
+                
+                var tempoMedio = (fim - inicio);
+
+                var div = document.getElementById('divID');
+                div.innerHTML += 'Força bruta ' + 'Tempo = ' + tempoMedio + '<br>';//escreve na dicID
+           
+
+                var div = document.getElementById('divID');
+                div.innerHTML += '<br>';
+
+                var inicio = Date.now();
+                var pontosProximos = pDivConqIniciar(vetor);//faz divisao e conquista com a mesma variavel
+                var fim = Date.now();
+                var tempoMedio = (fim - inicio);
+                
+
+                var div = document.getElementById('divID');
+                div.innerHTML += 'Divisão e conquista ' +' Tempo = ' + tempoMedio + '<br><br><br>' + 'Pontos mais proximos:'+ ' P1:' + pontosProximos1.a +'     P2:'+ pontosProximos1.b  ;
+
+                //canvas
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+
+        //parte do canvas no qual desenha as bolinhas de acordo com a posicao
+        var controlevet = 0
+        while(vetor.length > controlevet) {
+        ctx.beginPath();
+        ctx.arc(vetor[controlevet].x, vetor[controlevet].y, 10, 0, Math.PI * 2, true);
+        ctx.stroke();
+        ctx.fill();
+        ctx.beginPath();
+        controlevet = controlevet+1
+        }
+        //parte do canvas que faz um risco vermelho entre os pontos menores.
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
+        ctx.moveTo(vetor[pontosProximos1.a].x, vetor[pontosProximos1.a].y);
+        ctx.lineTo(vetor[pontosProximos1.b].x, vetor[pontosProximos1.b].y);
+        ctx.fill();
+        }
+
+        function distancia(pontos, a, b) {//menor distancia entre dois pontos e recebe os pontos
+            var pA = pontos[a];
+            var pB = pontos[b];
+            return Math.sqrt( (pB.x - pA.x)**2 + (pB.y - pA.y)**2 )//calculo da menor distancia entre dois pontos
+        }
+
+        function gerarPontosRandomico(size) {// gerar pontos
+            var vetor = [];
+            for (var i = 0; i < size; i++) {
+                var ponto = {x:Math.floor(Math.random() * (2 * size)),
+                             y:Math.floor(Math.random() * (2 * size))};
+                vetor.push(ponto);//adiciona o ponto no vetor
+            }
+            return vetor;//retorna vetor
+        }
+
+        // força bruta:
+        function menorDistanciaEntrePontos(pontos) {//compara ponto inicial com proximo ponto ate final ex 1-2, 1-3, 2-3
+            var proximos = {a: 0, b: 1, dist: distancia(pontos, 0, 1)};
+            for (var i = 0; i < pontos.length; i++) {
+                for (var j = i + 1; j < pontos.length; j++) {
+                    var dist = distancia(pontos, i, j);
+                    if (proximos.dist > dist) {
+                        proximos.a = i;
+                        proximos.b = j;
+                        proximos.dist = dist;
+                    }
+                }
+            }
+            return proximos;   
+        }
+
+        function distanciaDivConq(a, b) {//calculo da menor distancia entre dois pontos na divisao e conquista
+            return Math.sqrt( (b.x - a.x)**2 + (b.y - a.y)**2 );
+        }
+        
+        function pDivConqIniciar(A) {//'e chamado para comecar a divisao e conquista
+            var pontos = encontraMaisProximosDivConq(A, 0, A.length - 1);//faz a divisao e conquista
+            return {p1: pontos[0], p2: pontos[1], distancia: distanciaDivConq(pontos[0], pontos[1])};//retorna o x e y dos pontos da distancias
+        }
+
+        //divisão e conquista 
+        function encontraMaisProximosDivConq(pontos, p, r) {
+
+            if (pontos.length >= 3) { //se tiver mais de 2 para comparar
+                var p = 0;//inicio
+                var r = pontos.length - 1;//fim
+                var q = Math.floor((p + r) / 2);// meio
+
+                var pontosA = [],pontosB = [];//do inicio e do fim
+
+                for (let i = 0; i <= q; i++) {//roda inicio
+                    pontosA.push(pontos[i]);
+                }
+                for (let i = q + 1; i <= r; i++) {//roda fim
+                    pontosB.push(pontos[i]);
+                }
+                //faz para os dois lado
+                var ladoA = encontraMaisProximosDivConq(pontosA, p, q);
+                var ladoB = encontraMaisProximosDivConq(pontosB, q + 1, r);
+
+                return encontraMenor(ladoA, ladoB);//compara os dois lados
+            }
+            return pontos;
+        }
+
+        function encontraMenor(ladoA, ladoB) {//calcula qual o menor distancia(lado)
+            var AeB = ladoA.concat(ladoB);//concatena o a com o  b
+
+            var maisProximos = [];
+            maisProximos.push(AeB[0]);
+            maisProximos.push(AeB[1]);
+
+            var menorDistancia = distanciaDivConq(maisProximos[0], maisProximos[1]);//faz a comparacao do 2 pontos recebidos
+
+            for (let i = 0; i < AeB.length; i++) {//faz a comparacao entre dois pontos
+                for (let j = i + 1; j < AeB.length; j++) {  
+                    if (distanciaDivConq(AeB[i], AeB[j]) < menorDistancia) {//ve se a variavel menor distancia e menor que a nova variavel
+                        maisProximos[0] = AeB[i];
+                        maisProximos[1] = AeB[j];
+                        menorDistancia = distanciaDivConq(AeB[i], AeB[j]);
+                    }
+                }
+            }
+
+            return maisProximos;//retorna a menor distancia que 'e um array com os pontos
+        }
+
+        function init() {//da tag body para ficar atualizando o canvas so atualiza por causa da linha que traca entre os 2 pontos mais proximos
+
+            iniciar();
+        } 
+    </script>
+
+    <style>
+       body{
+           font-size: 50px;
+       }
+       canvas { border: 1px solid yellow; }
+    </style>
+</head>
+<body onload="init();">
+    <div id="divID">
+        <h5>Tire o zoom:('CTR' + '-')</h5><br>
+        <h1>Processamento de 4000 pontos:</h1><br>
+    </div>
+    <br />
+    <canvas id="canvas" width="8000" height="8000"></canvas>
+</body>
+</html>
